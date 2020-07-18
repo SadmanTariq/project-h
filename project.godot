@@ -9,12 +9,18 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "RigidBody",
+"class": "GravityBasedRb",
+"language": "GDScript",
+"path": "res://objects/gravity_based_rb.gd"
+}, {
 "base": "StaticBody",
 "class": "Planet",
 "language": "GDScript",
 "path": "res://environment/planet/planet.gd"
 } ]
 _global_script_class_icons={
+"GravityBasedRb": "",
 "Planet": ""
 }
 
@@ -23,6 +29,10 @@ _global_script_class_icons={
 config/name="Project-H"
 run/main_scene="res://main_scenes/main.tscn"
 config/icon="res://icon.png"
+
+[autoload]
+
+Constants="*res://scripts/constants.gd"
 
 [display]
 
