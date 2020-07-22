@@ -1,9 +1,17 @@
 shader_type spatial;
+render_mode specular_schlick_ggx;
 //render_mode unshaded;
 //render_mode cull_front;
 
+uniform float seed = 80.;
+uniform vec4 oceanColor : hint_color;
+uniform vec4 grassColor : hint_color;
+uniform vec4 sandColor : hint_color;
+uniform vec4 topColor : hint_color;
+
 varying vec3 vertex_pos;
 varying vec3 normal_vec;
+varying float height;
 
 //	Classic Perlin 3D Noise 
 //	by Stefan Gustavson
@@ -79,9 +87,46 @@ float cnoise(vec3 P){
   float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); 
   return 2.2 * n_xyz;
 }
+//
+//float smin(float a, float b, float k) {
+//  float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
+//  return mix(a, b, h) - k*h*(1.0-h);
+//}
 
-float scaledNoise(in vec3 pos, in float scale){return cnoise(pos * scale) / 2.0 + 0.5;}
-float testNoise(in vec3 pos){return scaledNoise(pos, 2.0) * 1.;}
+float scaledNoise(in vec3 pos, in float scale, in vec3 offset){
+	return cnoise(pos * scale + offset);// / 2.0 + 0.5;
+}
+
+float oceanNoise(in vec3 pos){
+	float threshold = -0.2;
+	float scale = 1.4;
+	return smoothstep(threshold, threshold + 0.7,
+					  scaledNoise(pos, scale, vec3(seed)));
+}
+
+float landNoise(in vec3 pos){
+//	float seed = 50.;
+	float noise = 0.0;
+	int detailIterations = 5;
+	float scaleMult = 3.0;
+	float ampMult = 0.2;
+	vec3 offsetChange = vec3(50.);
+	for (int i = 0; i < detailIterations; i++){
+		float scale = 1.2 * pow(scaleMult, float(i));
+		vec3 offset = vec3(seed) + offsetChange * float(i);
+		float amplitude = 1.1 * pow(ampMult, float(i));
+		noise += scaledNoise(pos, scale, offset) * amplitude;
+	}
+	return noise;
+}
+
+float mainNoise(in vec3 pos){
+//	return landNoise(pos);
+//	return landNoise(pos) * oceanNoise(pos);
+//	return smin(landNoise(pos), oceanNoise(pos) - 0.3, 1.);
+//	return mix(-0.7, landNoise(pos), oceanNoise(pos));
+	return max(landNoise(pos) - (1. - oceanNoise(pos)), -0.7);
+}
 
 vec3 normal(in vec3 pos, in vec3 normal){
 	float offset = .025;
@@ -91,10 +136,10 @@ vec3 normal(in vec3 pos, in vec3 normal){
 	vec3 y1 = normalize(pos - binormal * offset) * dot(pos, pos);
 	vec3 y2 = normalize(pos + binormal * offset) * dot(pos, pos);
 	
-	vec3 vx1 = x1 + normalize(x1) * testNoise(x1);
-	vec3 vx2 = x2 + normalize(x2) * testNoise(x2);
-	vec3 vy1 = y1 + normalize(y1) * testNoise(y1);
-	vec3 vy2 = y2 + normalize(y2) * testNoise(y2);
+	vec3 vx1 = x1 + normalize(x1) * mainNoise(x1);
+	vec3 vx2 = x2 + normalize(x2) * mainNoise(x2);
+	vec3 vy1 = y1 + normalize(y1) * mainNoise(y1);
+	vec3 vy2 = y2 + normalize(y2) * mainNoise(y2);
 	
 	vec3 x = vx2 - vx1;
 	vec3 y = vy2 - vy1;
@@ -102,13 +147,26 @@ vec3 normal(in vec3 pos, in vec3 normal){
 }
 
 void fragment(){
-//	ALBEDO = vec4(NORMAL, 1.).xyz;
+	float nHeight = (height + 0.7) / 1.8;
+	float water = smoothstep(0.0, 0.02, nHeight);
+	ROUGHNESS = clamp(water + 0.2, 0.0, 1.0);
+	SPECULAR = (1.0 - water) * 0.4;
+	ANISOTROPY_FLOW = vec2(1., 0.);
+	ANISOTROPY = (1.0 - water) * 0.8;
+	TRANSMISSION = vec3((1.0 - water) * 0.02);
+
+	vec4 landColor = mix(sandColor, mix(grassColor, topColor,
+						 smoothstep(0.6, 0.7, nHeight)),
+						 smoothstep(0.0, 0.2, nHeight));
+	vec3 color = mix(oceanColor, landColor, water).rgb;
+	ALBEDO = color;
 }
 
 void vertex(){
 	vertex_pos = VERTEX;
 	normal_vec = NORMAL;
-	VERTEX += NORMAL * testNoise(vertex_pos) * 0.2;
+	height = mainNoise(vertex_pos);
 	normal_vec = normal(VERTEX, NORMAL);
+	VERTEX += NORMAL * height * 0.2;
 	NORMAL = normal_vec;
 }

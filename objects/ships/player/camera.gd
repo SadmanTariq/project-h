@@ -1,16 +1,8 @@
-extends Spatial
+extends Camera
 
-export var sensitivity = deg2rad(0.2)  # rad per pixel
-var rot = Vector2.ZERO
+func _on_Player_thrust_activated():
+	$ScreenShake3D.start(15, 0.05)
+	#func start(frequency=15, amplitude=16, priority=0, duration=-1.0):
 
-func _ready():
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-
-func _input(event):
-	if event is InputEventMouseMotion:
-		rotation.x = clamp(rotation.x - event.relative.y * sensitivity,
-						   -PI / 2, PI / 2)
-		rotation.y -= event.relative.x * sensitivity
-		
-	elif event.is_action_pressed("pause"):
-		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+func _on_Player_thrust_deactivated():
+	$ScreenShake3D.stop()

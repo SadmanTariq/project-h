@@ -1,16 +1,31 @@
-extends RigidBody
+class_name Player
+extends Ship
 
+func _input(event):
+	if event.is_action_pressed("thrust"):
+		_set_thrust_active(true)
+	elif event.is_action_released("thrust"):
+		_set_thrust_active(false)
 
-# Declare member variables here. Examples:
-# var a = 2
-# var b = "text"
+func _physics_process(delta):
+	._physics_process(delta)
+	_get_torque()
+	
+func _get_torque():
+	_pitch_torque = 0.0
+	if Input.is_action_pressed("pitch_pos"):
+		_pitch_torque += 1.0
+	if Input.is_action_pressed("pitch_neg"):
+		_pitch_torque -= 1.0
+	
+	_yaw_torque = 0.0
+	if Input.is_action_pressed("yaw_pos"):
+		_yaw_torque += 1.0
+	if Input.is_action_pressed("yaw_neg"):
+		_yaw_torque -= 1.0
 
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-#func _process(delta):
-#	pass
+	_roll_torque = 0.0
+	if Input.is_action_pressed("roll_pos"):
+		_roll_torque += 1.0
+	if Input.is_action_pressed("roll_neg"):
+		_roll_torque -= 1.0

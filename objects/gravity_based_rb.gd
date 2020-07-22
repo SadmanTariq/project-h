@@ -6,7 +6,6 @@ var parent: Planet
 func _ready():
 	if $".." is Planet:
 		parent = $".."
-		linear_velocity.x = sqrt(Constants.BIG_G * parent.mass / global_transform.origin.z)
 
 func _physics_process(delta):
 	if parent == null:

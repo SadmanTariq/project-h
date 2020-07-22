@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://environment/planet/planet.tscn" type="PackedScene" id=1]
 [ext_resource path="res://objects/ships/player/player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://objects/ships/ship.gd" type="Script" id=3]
+[ext_resource path="res://objects/ships/player/ship/mainship.glb" type="PackedScene" id=4]
 
 [node name="Main" type="Node"]
 
@@ -11,3 +13,12 @@
 
 [node name="Player" parent="World/Planet" instance=ExtResource( 2 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 200 )
+mass = 5000.0
+
+[node name="Ship" type="RigidBody" parent="World/Planet"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.43896, 0, 200 )
+script = ExtResource( 3 )
+
+[node name="mainship" parent="World/Planet/Ship" instance=ExtResource( 4 )]
+
+[node name="DirectionalLight" type="DirectionalLight" parent="World"]

@@ -1,8 +1,10 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=8 format=2]
 
-[ext_resource path="res://objects/gravity_based_rb.gd" type="Script" id=1]
+[ext_resource path="res://objects/ships/player/player.gd" type="Script" id=1]
 [ext_resource path="res://objects/ships/player/camera.gd" type="Script" id=2]
-[ext_resource path="res://objects/ships/player/ship/mainship.glb" type="PackedScene" id=7]
+[ext_resource path="res://objects/ships/player/ship/mainship.tscn" type="PackedScene" id=3]
+[ext_resource path="res://scripts/screen_shake/screen_shake_3d.tscn" type="PackedScene" id=4]
+[ext_resource path="res://objects/ships/player/camera_pivot.gd" type="Script" id=5]
 
 [sub_resource type="CapsuleShape" id=1]
 radius = 0.278525
@@ -12,8 +14,10 @@ height = 1.4604
 extents = Vector3( 1.157, 0.0809374, 0.1844 )
 
 [node name="Player" type="RigidBody"]
+mass = 5000.0
 gravity_scale = 0.0
 script = ExtResource( 1 )
+thrust = 10000.0
 
 [node name="BodyShape" type="CollisionShape" parent="."]
 transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -1.35945e-07, 0, -0.592943 )
@@ -23,13 +27,19 @@ shape = SubResource( 1 )
 transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -7.9215e-08, -0.0694616, 0.0559781 )
 shape = SubResource( 2 )
 
-[node name="Mesh" parent="." instance=ExtResource( 7 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.203924 )
+[node name="Mesh" parent="." instance=ExtResource( 3 )]
 
 [node name="CameraPivot" type="Spatial" parent="."]
-script = ExtResource( 2 )
+script = ExtResource( 5 )
 
 [node name="Camera" type="Camera" parent="CameraPivot"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1.22103e-07, 1.0096, 2.50893 )
 current = true
 far = 5000.0
+script = ExtResource( 2 )
+
+[node name="ScreenShake3D" parent="CameraPivot/Camera" instance=ExtResource( 4 )]
+[connection signal="thrust_activated" from="." to="Mesh" method="_activate"]
+[connection signal="thrust_activated" from="." to="CameraPivot/Camera" method="_on_Player_thrust_activated"]
+[connection signal="thrust_deactivated" from="." to="Mesh" method="_deactivate"]
+[connection signal="thrust_deactivated" from="." to="CameraPivot/Camera" method="_on_Player_thrust_deactivated"]
